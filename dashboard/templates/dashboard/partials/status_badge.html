@@ -1,0 +1,6 @@
+{% if status == 'PENDING' %}<span class="inline-flex h-6 items-center rounded-default bg-orange-100 px-2 text-xs font-semibold uppercase text-orange-700 dark:bg-orange-900 dark:text-orange-400">Beklemede</span>
+{% elif status == 'CONFIRMED' %}<span class="inline-flex h-6 items-center rounded-default bg-primary-100 px-2 text-xs font-semibold uppercase text-primary-700 dark:bg-primary-900 dark:text-primary-300">Onaylandı</span>
+{% elif status == 'SHIPPED' %}<span class="inline-flex h-6 items-center rounded-default bg-blue-100 px-2 text-xs font-semibold uppercase text-blue-700 dark:bg-blue-900 dark:text-blue-400">Kargoda</span>
+{% elif status == 'DELIVERED' %}<span class="inline-flex h-6 items-center rounded-default bg-green-100 px-2 text-xs font-semibold uppercase text-green-700 dark:bg-green-900 dark:text-green-400">Teslim</span>
+{% elif status == 'CANCELLED' %}<span class="inline-flex h-6 items-center rounded-default bg-red-100 px-2 text-xs font-semibold uppercase text-red-700 dark:bg-red-900 dark:text-red-400">İptal</span>
+{% endif %}

@@ -1,0 +1,5 @@
+{% if mtype == 'IN' %}<span class="inline-flex h-6 items-center rounded-default bg-green-100 px-2 text-xs font-semibold uppercase text-green-700 dark:bg-green-900 dark:text-green-400">Giriş</span>
+{% elif mtype == 'OUT' %}<span class="inline-flex h-6 items-center rounded-default bg-red-100 px-2 text-xs font-semibold uppercase text-red-700 dark:bg-red-900 dark:text-red-400">Çıkış</span>
+{% elif mtype == 'TRANSFER' %}<span class="inline-flex h-6 items-center rounded-default bg-blue-100 px-2 text-xs font-semibold uppercase text-blue-700 dark:bg-blue-900 dark:text-blue-400">Transfer</span>
+{% else %}<span class="inline-flex h-6 items-center rounded-default bg-base-100 px-2 text-xs font-semibold uppercase text-font-default-light dark:bg-base-800 dark:text-font-default-dark">Düzeltme</span>
+{% endif %}

@@ -2,15 +2,26 @@ from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from customers.models import Customer
 from inventory.models import Product, Stock
 from orders.models import Order
 
 from .serializers import (
+    CustomerSerializer,
     ProductListSerializer,
     StockSerializer,
     OrderReadSerializer,
     OrderCreateSerializer,
+    OrderUpdateSerializer,
 )
+
+
+class CustomerViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only endpoint for active customers."""
+    queryset = Customer.objects.filter(is_active=True)
+    serializer_class = CustomerSerializer
+    filterset_fields = ['type']
+    search_fields = ['first_name', 'last_name', 'email', 'company_name']
 
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -21,7 +32,7 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=True, methods=['get'])
     def stock(self, request, pk=None):
-        """Ürünün tüm depolardaki stok durumu."""
+        """Return stock levels for a product across all warehouses."""
         product = self.get_object()
         stocks = Stock.objects.filter(product=product).select_related('warehouse')
         serializer = StockSerializer(stocks, many=True)
@@ -36,9 +47,12 @@ class StockViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['get'])
     def critical(self, request):
-        """Kritik stok eşiğinin altındaki tüm kayıtlar."""
-        critical = [s for s in self.get_queryset() if s.is_critical]
-        serializer = self.get_serializer(critical, many=True)
+        """Return all stock records below the minimum threshold."""
+        from django.db.models import F
+        critical_qs = self.get_queryset().filter(
+            quantity__lte=F('min_level') + F('reserved_quantity')
+        )
+        serializer = self.get_serializer(critical_qs, many=True)
         return Response(serializer.data)
 
 
@@ -52,6 +66,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return OrderCreateSerializer
+        if self.action in ['update', 'partial_update']:
+            return OrderUpdateSerializer
         return OrderReadSerializer
 
     def _transition(self, pk, allowed_from, next_status, error_msg):
@@ -64,40 +80,40 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
-        """PENDING → CONFIRMED: Stoktan gerçek düşüş başlar."""
+        """Transition order from PENDING to CONFIRMED. Triggers real stock deduction."""
         return self._transition(
             pk,
             allowed_from=[Order.Status.PENDING],
             next_status=Order.Status.CONFIRMED,
-            error_msg='Sadece PENDING siparişler onaylanabilir.',
+            error_msg='Only PENDING orders can be confirmed.',
         )
 
     @action(detail=True, methods=['post'])
     def ship(self, request, pk=None):
-        """CONFIRMED → SHIPPED."""
+        """Transition order from CONFIRMED to SHIPPED."""
         return self._transition(
             pk,
             allowed_from=[Order.Status.CONFIRMED],
             next_status=Order.Status.SHIPPED,
-            error_msg='Sadece CONFIRMED siparişler kargoya verilebilir.',
+            error_msg='Only CONFIRMED orders can be shipped.',
         )
 
     @action(detail=True, methods=['post'])
     def deliver(self, request, pk=None):
-        """SHIPPED → DELIVERED."""
+        """Transition order from SHIPPED to DELIVERED."""
         return self._transition(
             pk,
             allowed_from=[Order.Status.SHIPPED],
             next_status=Order.Status.DELIVERED,
-            error_msg='Sadece SHIPPED siparişler teslim edilebilir.',
+            error_msg='Only SHIPPED orders can be marked as delivered.',
         )
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
-        """* → CANCELLED: DELIVERED siparişler iptal edilemez."""
+        """Cancel an order. DELIVERED orders cannot be cancelled."""
         return self._transition(
             pk,
             allowed_from=[Order.Status.PENDING, Order.Status.CONFIRMED, Order.Status.SHIPPED],
             next_status=Order.Status.CANCELLED,
-            error_msg='Teslim edilmiş sipariş iptal edilemez.',
+            error_msg='Delivered orders cannot be cancelled.',
         )

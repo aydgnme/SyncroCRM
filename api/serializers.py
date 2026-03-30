@@ -1,6 +1,14 @@
+from django.db import transaction
 from rest_framework import serializers
+from customers.models import Customer
 from inventory.models import Category, Product, Warehouse, Stock, StockMovement
 from orders.models import Order, OrderItem
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['id', 'type', 'first_name', 'last_name', 'email', 'phone', 'company_name', 'is_active']
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -54,15 +62,18 @@ class OrderItemWriteSerializer(serializers.ModelSerializer):
         fields = ['product', 'warehouse', 'quantity', 'unit_price']
 
     def validate(self, data):
+        # Pre-flight check (without lock) for fast feedback on obvious failures.
+        # A locked re-check happens inside OrderCreateSerializer.create().
         try:
             stock = Stock.objects.get(product=data['product'], warehouse=data['warehouse'])
         except Stock.DoesNotExist:
             raise serializers.ValidationError(
-                f"{data['product'].sku} ürünü için seçilen depoda stok kaydı bulunamadı."
+                f"No stock record found for {data['product'].sku} in the selected warehouse."
             )
         if stock.available_quantity < data['quantity']:
             raise serializers.ValidationError(
-                f"Yetersiz stok. Kullanılabilir: {stock.available_quantity}, İstenen: {data['quantity']}"
+                f"Insufficient stock for {data['product'].sku}: "
+                f"available {stock.available_quantity}, requested {data['quantity']}."
             )
         return data
 
@@ -85,6 +96,14 @@ class OrderReadSerializer(serializers.ModelSerializer):
         return str(obj.customer)
 
 
+class OrderUpdateSerializer(serializers.ModelSerializer):
+    """Allows updating only the note field on an existing order."""
+
+    class Meta:
+        model = Order
+        fields = ['note']
+
+
 class OrderCreateSerializer(serializers.ModelSerializer):
     items = OrderItemWriteSerializer(many=True)
 
@@ -94,12 +113,23 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     def validate_items(self, value):
         if not value:
-            raise serializers.ValidationError("Sipariş en az bir kalem içermelidir.")
+            raise serializers.ValidationError('An order must contain at least one item.')
         return value
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
-        order = Order.objects.create(**validated_data)
-        for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
+        with transaction.atomic():
+            order = Order.objects.create(**validated_data)
+            for item_data in items_data:
+                # Re-validate with row-level lock to prevent race conditions
+                stock = Stock.objects.select_for_update().get(
+                    product=item_data['product'],
+                    warehouse=item_data['warehouse'],
+                )
+                if stock.available_quantity < item_data['quantity']:
+                    raise serializers.ValidationError(
+                        f"Insufficient stock for {item_data['product'].sku}: "
+                        f"available {stock.available_quantity}, requested {item_data['quantity']}."
+                    )
+                OrderItem.objects.create(order=order, **item_data)
         return order

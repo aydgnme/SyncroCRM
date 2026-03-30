@@ -1,0 +1,92 @@
+{% extends 'dashboard/base_unfold.html' %}
+{% block title %}Stok | SyncroCRM{% endblock %}
+{% block page_title %}Stok Durumu{% endblock %}
+
+{% block page_badge %}
+<span class="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900 dark:text-primary-300">{{ page_obj.paginator.count }} kayıt</span>
+{% endblock %}
+
+{% block page_intro %}
+<p class="mt-2 text-sm text-font-default-light dark:text-font-default-dark">
+  Depo bazlı stok seviyelerini inceleyin, kritik ürünleri ayırın ve hızlı düzeltme işlemleri yapın.
+</p>
+{% endblock %}
+
+{% block page_meta %}
+<div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Kritik Kayıt</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ critical_count }}</div>
+  </div>
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Kullanılabilir Toplam</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ available_total }}</div>
+  </div>
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Aktif Depo</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ warehouse_count }}</div>
+  </div>
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Görünen Kayıt</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ page_obj.paginator.count }}</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="/admin/inventory/stock/"
+   class="inline-flex items-center gap-2 rounded-default border border-base-200 bg-white px-3 py-2 text-sm font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800">
+  <span class="material-symbols-outlined sym">open_in_new</span>
+  Admin Liste
+</a>
+{% endblock %}
+
+{% block content %}
+<section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+  <div class="flex flex-col gap-3 border-b border-base-200 px-4 py-4 dark:border-base-800 lg:px-6">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div class="relative w-full lg:max-w-sm">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-font-subtle-light dark:text-font-subtle-dark" style="font-size:16px;">search</span>
+        <input type="search"
+               class="search-field w-full rounded-default border border-base-200 bg-base-50 py-2 pl-9 pr-3 text-sm text-font-important-light dark:border-base-700 dark:bg-base-800 dark:text-font-important-dark"
+               placeholder="SKU veya ürün adına göre ara"
+               name="q"
+               value="{{ search }}"
+               hx-get="{% url 'dashboard:stock' %}"
+               hx-trigger="keyup changed delay:400ms, search"
+               hx-target="#stock-content"
+               hx-swap="innerHTML"
+               hx-include="[name='warehouse_filter']"
+               hx-push-url="true">
+      </div>
+
+      <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">
+        Depo filtresi ve arama aynı URL üzerinde korunur.
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <button class="rounded-full border px-3 py-1.5 text-xs font-medium {% if not current_warehouse %}border-primary-600 bg-primary-600 text-white{% else %}border-base-200 bg-white text-font-default-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-default-dark dark:hover:bg-base-800{% endif %}"
+              hx-get="{% url 'dashboard:stock' %}"
+              hx-target="#stock-content"
+              hx-swap="innerHTML"
+              hx-include="[name='q']"
+              hx-push-url="true">Tüm Depolar</button>
+      {% for w in warehouses %}
+      <button class="rounded-full border px-3 py-1.5 text-xs font-medium {% if current_warehouse == w.pk|stringformat:'s' %}border-primary-600 bg-primary-600 text-white{% else %}border-base-200 bg-white text-font-default-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-default-dark dark:hover:bg-base-800{% endif %}"
+              hx-get="{% url 'dashboard:stock' %}?warehouse={{ w.pk }}"
+              hx-target="#stock-content"
+              hx-swap="innerHTML"
+              hx-include="[name='q']"
+              hx-push-url="true">{{ w.name }}</button>
+      {% endfor %}
+    </div>
+
+    <input type="hidden" name="warehouse_filter" value="{{ current_warehouse }}">
+  </div>
+
+  <div id="stock-content">
+    {% include 'dashboard/partials/stock_content.html' %}
+  </div>
+</section>
+{% endblock %}

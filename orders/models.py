@@ -36,7 +36,7 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='order_items')
     warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name='order_items')
     quantity = models.IntegerField()
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)  # sipariş anındaki fiyat
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)  # Price at the time of order
 
     class Meta:
         db_table = 'order_items'

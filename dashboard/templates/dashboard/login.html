@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SyncroCRM — Login</title>
+  <link href="{% static 'unfold/css/styles.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0">
+  <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+  <style>
+    .sym { font-size: 18px; line-height: 1; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin .8s linear infinite; display: inline-block; }
+    [x-cloak] { display: none !important; }
+  </style>
+</head>
+<body class="bg-base-50 min-h-screen flex items-center justify-center" x-data="{ showPw: false, loading: false }">
+  <div class="bg-white border border-base-200 rounded-default shadow-xs p-8 w-full" style="max-width:380px;">
+
+    <!-- Brand -->
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-1">
+        <div class="bg-primary-600 rounded-default h-8 w-8 flex items-center justify-center">
+          <span class="text-white font-bold text-sm">S</span>
+        </div>
+        <span class="font-bold text-important text-lg">Syncro<span class="text-primary-600">CRM</span></span>
+      </div>
+      <p class="text-base-400 text-sm">Sign in to the internal management panel</p>
+    </div>
+
+    <!-- Error message -->
+    {% if error %}
+    <div class="flex items-center gap-2 bg-red-100 text-red-700 rounded-default px-4 py-3 mb-6 text-sm">
+      <span class="material-symbols-outlined sym">error</span>
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="post" @submit="loading = true">
+      {% csrf_token %}
+
+      <div class="mb-4">
+        <label class="block text-xs font-semibold text-base-600 mb-1.5 uppercase" style="letter-spacing:.04em;">
+          Username
+        </label>
+        <input type="text" name="username"
+               class="border border-base-200 rounded-default w-full px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary-600 text-important"
+               style="transition: border-color .15s;"
+               placeholder="your_username" autofocus autocomplete="username" required
+               {% if locked %}disabled{% endif %}>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-xs font-semibold text-base-600 mb-1.5 uppercase" style="letter-spacing:.04em;">
+          Password
+        </label>
+        <div class="relative">
+          <input :type="showPw ? 'text' : 'password'" name="password"
+                 class="border border-base-200 rounded-default w-full px-3 py-2 pr-10 text-sm bg-white focus:outline-none focus:border-primary-600 text-important"
+                 style="transition: border-color .15s;"
+                 placeholder="••••••••" autocomplete="current-password" required
+                 {% if locked %}disabled{% endif %}>
+          <button type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-base-400 hover:text-base-600"
+                  @click="showPw = !showPw">
+            <span class="material-symbols-outlined sym" x-text="showPw ? 'visibility_off' : 'visibility'"></span>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit"
+              class="bg-primary-600 text-white rounded-default font-medium w-full py-2 text-sm flex items-center justify-center gap-2"
+              style="transition: background .15s;"
+              :disabled="loading"
+              :class="loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary-700'"
+              {% if locked %}disabled{% endif %}>
+        <span x-show="!loading">Sign In</span>
+        <span x-show="loading" class="flex items-center gap-2" x-cloak>
+          <span class="material-symbols-outlined sym spin">sync</span>
+          Signing in…
+        </span>
+      </button>
+    </form>
+
+    <!-- Attempt indicator dots -->
+    {% if attempts and not locked %}
+    <div class="flex items-center justify-center gap-1.5 mt-6">
+      {% for i in "123" %}
+        <div class="h-2 w-2 rounded-full {% if forloop.counter <= attempts %}bg-red-500{% else %}bg-base-200{% endif %}"></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+</body>
+</html>

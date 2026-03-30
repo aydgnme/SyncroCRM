@@ -1,0 +1,58 @@
+<tr id="stock-row-{{ s.pk }}" class="crm-table__row overflow-hidden rounded-default border {% if s.is_critical %}border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900{% else %}border-base-200 bg-white dark:border-base-800 dark:bg-base-900{% endif %} shadow-xs lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none">
+  <td data-label="SKU" class="crm-table__cell border-t border-base-200 px-4 py-3 first:border-t-0 dark:border-base-800 lg:pl-6 lg:pr-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="font-semibold text-font-important-light dark:text-font-important-dark">{{ s.product.sku }}</span>
+  </td>
+
+  <td data-label="Ürün" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <div class="min-w-0">
+      <div class="text-font-important-light dark:text-font-important-dark">{{ s.product.name }}</div>
+      <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ s.product.category|default:"Kategori yok" }}</div>
+    </div>
+  </td>
+
+  <td data-label="Depo" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="text-font-default-light dark:text-font-default-dark">{{ s.warehouse.name }}</span>
+  </td>
+
+  <td data-label="Toplam" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="text-font-important-light dark:text-font-important-dark">{{ s.quantity }}</span>
+  </td>
+
+  <td data-label="Ayrılan" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="text-font-default-light dark:text-font-default-dark">{{ s.reserved_quantity }}</span>
+  </td>
+
+  <td data-label="Kullanılabilir" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="font-semibold {% if s.is_critical %}text-red-700 dark:text-red-400{% else %}text-font-important-light dark:text-font-important-dark{% endif %}">{{ s.available_quantity }}</span>
+  </td>
+
+  <td data-label="Minimum" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="text-font-default-light dark:text-font-default-dark">{{ s.min_level }}</span>
+  </td>
+
+  <td data-label="Durum" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    {% if s.is_critical %}
+      <span class="badge-critical inline-flex h-6 items-center gap-1 rounded-default px-2 text-xs font-semibold uppercase">
+        <span class="material-symbols-outlined" style="font-size:12px;">warning</span>
+        Kritik
+      </span>
+    {% else %}
+      <span class="badge-normal inline-flex h-6 items-center gap-1 rounded-default px-2 text-xs font-semibold uppercase">
+        <span class="material-symbols-outlined" style="font-size:12px;">check_circle</span>
+        Normal
+      </span>
+    {% endif %}
+  </td>
+
+  <td data-label="Aksiyon" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:pr-6 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <div class="flex w-full lg:justify-end">
+      <button class="inline-flex items-center gap-1 rounded-default border border-base-200 bg-white px-3 py-1.5 text-xs font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800"
+              hx-get="{% url 'dashboard:stock_adjust' s.pk %}"
+              hx-target="#modal-root"
+              hx-swap="innerHTML">
+        <span class="material-symbols-outlined" style="font-size:14px;">tune</span>
+        Düzenle
+      </button>
+    </div>
+  </td>
+</tr>

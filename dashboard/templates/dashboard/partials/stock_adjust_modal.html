@@ -1,0 +1,87 @@
+<div style="position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem;"
+     onclick="if(event.target===this)document.getElementById('modal-root').innerHTML=''">
+  <div class="w-full max-w-lg overflow-hidden rounded-default border border-base-200 bg-white shadow-sm dark:border-base-800 dark:bg-base-900"
+       onclick="event.stopPropagation()">
+
+    <div class="flex items-center justify-between border-b border-base-200 px-6 py-4 dark:border-base-800">
+      <div>
+        <div class="font-semibold text-font-important-light dark:text-font-important-dark">Stok Düzenle</div>
+        <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ s.product.sku }} · {{ s.product.name }} · {{ s.warehouse.name }}</div>
+      </div>
+      <button class="text-font-subtle-light hover:text-font-default-light dark:text-font-subtle-dark dark:hover:text-font-default-dark"
+              onclick="document.getElementById('modal-root').innerHTML=''">
+        <span class="material-symbols-outlined" style="font-size:20px;">close</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 border-b border-base-200 bg-base-50 px-6 py-4 text-center dark:border-base-800 dark:bg-base-800">
+      <div>
+        <div class="text-lg font-bold text-font-important-light dark:text-font-important-dark">{{ s.quantity }}</div>
+        <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Toplam</div>
+      </div>
+      <div>
+        <div class="text-lg font-bold text-font-important-light dark:text-font-important-dark">{{ s.reserved_quantity }}</div>
+        <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Ayrılan</div>
+      </div>
+      <div>
+        <div class="text-lg font-bold {% if s.is_critical %}text-red-700 dark:text-red-400{% else %}text-green-700 dark:text-green-400{% endif %}">{{ s.available_quantity }}</div>
+        <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Kullanılabilir</div>
+      </div>
+    </div>
+
+    <form hx-post="{% url 'dashboard:stock_adjust' s.pk %}"
+          hx-target="#stock-row-{{ s.pk }}"
+          hx-swap="outerHTML"
+          class="space-y-4 px-6 py-5">
+      {% csrf_token %}
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Hareket Tipi</label>
+          <select name="type" class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+            {% for val, label in movement_types %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Miktar Değişimi</label>
+          <input type="number" name="change" value="0"
+                 class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+          <p class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">Azaltma için yalnızca düzeltme tipiyle negatif değer girin.</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+          Yeni Minimum Seviye
+          <span class="normal-case text-font-subtle-light dark:text-font-subtle-dark">(mevcut: {{ s.min_level }})</span>
+        </label>
+        <input type="number" name="min_level" value="{{ s.min_level }}" min="0"
+               class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+          Açıklama
+          <span class="normal-case text-font-subtle-light dark:text-font-subtle-dark">(isteğe bağlı)</span>
+        </label>
+        <input type="text" name="reason" placeholder="Örn. Tedarikçiden giriş, sayım farkı"
+               class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-1">
+        <button type="button"
+                class="inline-flex items-center rounded-default border border-base-200 bg-white px-4 py-2 text-sm font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800"
+                onclick="document.getElementById('modal-root').innerHTML=''">
+          Vazgeç
+        </button>
+        <button type="submit"
+                class="inline-flex items-center rounded-default border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+          Değişiklikleri Kaydet
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

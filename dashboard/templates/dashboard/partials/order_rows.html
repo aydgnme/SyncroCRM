@@ -1,0 +1,5 @@
+{% for order in recent_orders %}
+  {% include 'dashboard/partials/order_row.html' %}
+{% empty %}
+  <tr><td colspan="6" class="px-6 py-8 text-center text-font-subtle-light dark:text-font-subtle-dark">Henüz sipariş yok</td></tr>
+{% endfor %}

@@ -1,0 +1,342 @@
+{% extends 'dashboard/base_unfold.html' %}
+{% block title %}Yeni Sipariş | SyncroCRM{% endblock %}
+{% block page_title %}Yeni Sipariş{% endblock %}
+
+{% block page_intro %}
+<p class="mt-2 text-sm text-font-default-light dark:text-font-default-dark">
+  Müşteri, kanal ve stok uygunluğunu tek ekranda kontrol ederek yeni sipariş oluşturun.
+</p>
+{% endblock %}
+
+{% block page_meta %}
+<div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Aktif Müşteri</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ customer_count }}</div>
+  </div>
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Satış Kanalı</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ channel_count }}</div>
+  </div>
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Aktif Ürün</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ product_count }}</div>
+  </div>
+  <div class="rounded-default border border-base-200 bg-white p-4 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Kullanılabilir Depo</div>
+    <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{{ warehouse_count }}</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'dashboard:orders' %}"
+   class="inline-flex items-center gap-2 rounded-default border border-base-200 bg-white px-3 py-2 text-sm font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800">
+  <span class="material-symbols-outlined sym">arrow_back</span>
+  Siparişlere Dön
+</a>
+{% endblock %}
+
+{% block extra_head %}
+<script id="products-data" type="application/json">{{ products_json|safe }}</script>
+<script id="warehouses-data" type="application/json">{{ warehouses_json|safe }}</script>
+<script id="stocks-data" type="application/json">{{ stocks_json|safe }}</script>
+<script id="initial-items-data" type="application/json">{{ items_json_initial|safe }}</script>
+{% endblock %}
+
+{% block content %}
+<div x-data="orderForm()" class="crm-form-layout">
+  <form method="post"
+        class="space-y-4"
+        @submit="$el.querySelector('[name=items_json]').value = JSON.stringify(items)">
+    {% csrf_token %}
+
+    {% if errors %}
+    <div class="rounded-default border border-red-200 bg-red-50 px-5 py-4 dark:border-red-900 dark:bg-red-900">
+      <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-400">
+        <span class="material-symbols-outlined sym">error</span>
+        Sipariş oluşturulamadı
+      </div>
+      <ul class="space-y-1 text-sm text-red-700 dark:text-red-400">
+        {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Sipariş Bilgileri</h3>
+        <p class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">Müşteri ve kanal seçimleri ilk satırdan önce tamamlanmalıdır.</p>
+      </div>
+
+      <div class="grid gap-4 p-5 md:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+            Müşteri <span class="text-red-500">*</span>
+          </label>
+          <select name="customer" required
+                  class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+            <option value="">Müşteri seçin</option>
+            {% for c in customers %}
+            <option value="{{ c.pk }}" {% if prev.customer == c.pk|stringformat:'s' %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+            Satış Kanalı <span class="text-red-500">*</span>
+          </label>
+          <select name="sales_channel" required
+                  class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+            <option value="">Kanal seçin</option>
+            {% for ch in channels %}
+            <option value="{{ ch.pk }}" {% if prev.sales_channel == ch.pk|stringformat:'s' %}selected{% endif %}>{{ ch.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+            Sipariş Numarası
+            <span class="normal-case text-font-subtle-light dark:text-font-subtle-dark">(boşsa otomatik üretilir)</span>
+          </label>
+          <input type="text" name="order_number" value="{{ prev.order_number }}"
+                 placeholder="Örn. ORD-2026-001"
+                 class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+            İç Not
+            <span class="normal-case text-font-subtle-light dark:text-font-subtle-dark">(isteğe bağlı)</span>
+          </label>
+          <textarea name="note" rows="3"
+                    placeholder="Teslimat notu, özel paketleme veya ekip içi notlar"
+                    class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">{{ prev.note }}</textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="flex flex-col gap-3 border-b border-base-200 px-5 py-4 dark:border-base-800 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Sipariş Satırları</h3>
+          <p class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">Ürün, depo, miktar ve fiyat bilgilerini satır bazında girin.</p>
+        </div>
+        <button type="button"
+                @click="addItem()"
+                class="inline-flex items-center gap-2 rounded-default border border-transparent bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700">
+          <span class="material-symbols-outlined sym">add</span>
+          Satır Ekle
+        </button>
+      </div>
+
+      <div class="p-5">
+        <div x-show="items.length === 0"
+             class="rounded-default border border-dashed border-base-200 px-6 py-12 text-center text-sm text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">
+          Henüz ürün satırı yok. İlk satırı ekleyerek devam edin.
+        </div>
+
+        <div class="space-y-3">
+          <template x-for="(item, idx) in items" :key="idx">
+            <article class="rounded-default border border-base-200 bg-base-50 p-4 dark:border-base-800 dark:bg-base-800">
+              <div class="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <div class="text-sm font-semibold text-font-important-light dark:text-font-important-dark" x-text="`Satır ${idx + 1}`"></div>
+                  <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Stok riski miktar alanında anlık kontrol edilir.</div>
+                </div>
+                <button type="button"
+                        @click="removeItem(idx)"
+                        class="inline-flex items-center rounded-default border border-base-200 bg-white px-2.5 py-1.5 text-xs font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-900">
+                  Kaldır
+                </button>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Ürün</label>
+                  <select x-model="item.product" @change="onProductChange(item)" required
+                          class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+                    <option value="">Ürün seçin</option>
+                    <template x-for="p in products" :key="p.id">
+                      <option :value="p.id" x-text="`${p.sku} · ${p.name}`"></option>
+                    </template>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Depo</label>
+                  <select x-model="item.warehouse" required
+                          class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+                    <option value="">Depo seçin</option>
+                    <template x-for="w in warehouses" :key="w.id">
+                      <option :value="w.id" x-text="w.name"></option>
+                    </template>
+                  </select>
+                  <p x-show="item.product && item.warehouse"
+                     class="mt-1 text-xs"
+                     :class="hasStockRisk(item) ? 'text-red-700 dark:text-red-400 font-semibold' : 'text-font-subtle-light dark:text-font-subtle-dark'">
+                    Kullanılabilir: <span x-text="availableQty(item) ?? '—'"></span>
+                  </p>
+                </div>
+
+                <div>
+                  <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Miktar</label>
+                  <input type="number" x-model.number="item.quantity" min="1" required
+                         class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+                </div>
+
+                <div>
+                  <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Birim Fiyat (₺)</label>
+                  <input type="number" x-model.number="item.unit_price" min="0" step="0.01" required
+                         class="w-full rounded-default border border-base-200 bg-white px-3 py-2 text-sm text-font-important-light focus:outline-none focus:border-primary-600 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark">
+                </div>
+              </div>
+
+              <div x-show="hasStockRisk(item)"
+                   class="mt-3 rounded-default border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-900 dark:text-red-400">
+                İstenen miktar kullanılabilir stoktan yüksek. Sipariş kaydı sırasında hata alınır.
+              </div>
+
+              <div class="mt-4 flex items-center justify-between border-t border-base-200 pt-3 text-sm dark:border-base-700">
+                <span class="text-font-subtle-light dark:text-font-subtle-dark">Satır Toplamı</span>
+                <span class="font-semibold text-font-important-light dark:text-font-important-dark" x-text="formatMoney(lineTotal(item))"></span>
+              </div>
+            </article>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <input type="hidden" name="items_json" value="[]">
+
+    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <a href="{% url 'dashboard:orders' %}"
+         class="inline-flex items-center justify-center rounded-default border border-base-200 bg-white px-5 py-2 text-sm font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800">
+        Vazgeç
+      </a>
+      <button type="submit"
+              class="inline-flex items-center justify-center rounded-default border border-transparent bg-primary-600 px-5 py-2 text-sm font-medium text-white hover:bg-primary-700">
+        Siparişi Oluştur
+      </button>
+    </div>
+  </form>
+
+  <aside class="crm-sticky space-y-4">
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Sipariş Özeti</h3>
+        <p class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">Form içindeki satırlar canlı olarak hesaplanır.</p>
+      </div>
+
+      <div class="space-y-4 p-5">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-default bg-base-50 p-4 dark:bg-base-800">
+            <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Satır</div>
+            <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark" x-text="items.length"></div>
+          </div>
+          <div class="rounded-default bg-base-50 p-4 dark:bg-base-800">
+            <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Toplam Adet</div>
+            <div class="mt-2 text-2xl font-semibold text-font-important-light dark:text-font-important-dark" x-text="itemCount"></div>
+          </div>
+        </div>
+
+        <div class="rounded-default border border-base-200 p-4 dark:border-base-700">
+          <div class="text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Genel Tutar</div>
+          <div class="mt-2 text-3xl font-semibold text-font-important-light dark:text-font-important-dark" x-text="formatMoney(grandTotal)"></div>
+          <div class="mt-2 text-xs text-font-subtle-light dark:text-font-subtle-dark">Birim fiyatlar girildikçe otomatik güncellenir.</div>
+        </div>
+
+        <div class="rounded-default border px-4 py-3 text-sm"
+             :class="itemsWithRisk > 0 ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-900 dark:text-red-400' : 'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-900 dark:text-green-400'">
+          <template x-if="itemsWithRisk > 0">
+            <span x-text="`${itemsWithRisk} satır stok riski taşıyor.`"></span>
+          </template>
+          <template x-if="itemsWithRisk === 0">
+            <span>Şu an görünen satırlarda stok riski yok.</span>
+          </template>
+        </div>
+      </div>
+    </section>
+
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Kontrol Listesi</h3>
+      </div>
+      <div class="space-y-3 px-5 py-4 text-sm text-font-default-light dark:text-font-default-dark">
+        <div class="flex items-start gap-2">
+          <span class="material-symbols-outlined sym text-primary-600">check_circle</span>
+          <span>Müşteri ve kanal seçimi zorunludur.</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="material-symbols-outlined sym text-primary-600">check_circle</span>
+          <span>Her satırda ürün, depo, miktar ve fiyat bulunmalıdır.</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="material-symbols-outlined sym text-primary-600">check_circle</span>
+          <span>Yetersiz stok varsa kayıt aşamasında uyarı döner.</span>
+        </div>
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function parseJsonTag(id, fallback) {
+  try {
+    return JSON.parse(document.getElementById(id).textContent || fallback);
+  } catch (err) {
+    return JSON.parse(fallback);
+  }
+}
+
+function orderForm() {
+  return {
+    items: parseJsonTag('initial-items-data', '[]'),
+    products: parseJsonTag('products-data', '[]'),
+    warehouses: parseJsonTag('warehouses-data', '[]'),
+    stocks: parseJsonTag('stocks-data', '[]'),
+    addItem() {
+      this.items.push({ product: '', warehouse: '', quantity: 1, unit_price: '' });
+    },
+    removeItem(idx) {
+      this.items.splice(idx, 1);
+    },
+    onProductChange(item) {
+      const product = this.products.find((row) => row.id == item.product);
+      if (product && (!item.unit_price || Number(item.unit_price) <= 0)) {
+        item.unit_price = Number(product.base_price);
+      }
+    },
+    availableQty(item) {
+      if (!item.product || !item.warehouse) return null;
+      const stock = this.stocks.find((row) => row.product_id == item.product && row.warehouse_id == item.warehouse);
+      return stock ? Number(stock.quantity) - Number(stock.reserved_quantity) : null;
+    },
+    hasStockRisk(item) {
+      const available = this.availableQty(item);
+      const requested = Number(item.quantity) || 0;
+      return available !== null && requested > available;
+    },
+    lineTotal(item) {
+      return (Number(item.quantity) || 0) * (Number(item.unit_price) || 0);
+    },
+    formatMoney(value) {
+      return `₺${Number(value || 0).toFixed(2)}`;
+    },
+    get itemCount() {
+      return this.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    },
+    get itemsWithRisk() {
+      return this.items.filter((item) => this.hasStockRisk(item)).length;
+    },
+    get grandTotal() {
+      return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0);
+    },
+  };
+}
+</script>
+{% endblock %}

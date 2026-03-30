@@ -12,14 +12,13 @@ class Customer(models.Model):
         default=CustomerType.INDIVIDUAL,
     )
 
-    # Temel bilgiler
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
 
-    # Kurumsal alanlar — sadece B2B için doldurulur
+    # Corporate fields — only filled for B2B customers
     company_name = models.CharField(max_length=255, blank=True)
     tax_number = models.CharField(max_length=20, blank=True)
     tax_office = models.CharField(max_length=100, blank=True)
@@ -47,11 +46,12 @@ class SalesChannel(models.Model):
         STORE = 'STORE', 'Fiziksel Mağaza'
         OTHER = 'OTHER', 'Diğer'
 
-    name = models.CharField(max_length=255)  # "İstanbul Mağazası", "Amazon TR" gibi özel isim
+    # Custom display name e.g. "Istanbul Store", "Amazon TR"
+    name = models.CharField(max_length=255)
     platform = models.CharField(max_length=20, choices=Platform.choices)
     is_active = models.BooleanField(default=True)
 
-    # API entegrasyon bilgileri — ileride doldurulacak
+    # API integration fields — to be filled per platform integration
     api_key = models.CharField(max_length=500, blank=True)
     shop_id = models.CharField(max_length=100, blank=True)
 

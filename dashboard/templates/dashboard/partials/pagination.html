@@ -1,0 +1,44 @@
+{% if page_obj.has_other_pages %}
+<div class="flex flex-col gap-3 border-t border-base-200 px-4 py-4 dark:border-base-800 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+  <span class="text-xs text-font-subtle-light dark:text-font-subtle-dark">
+    {{ page_obj.start_index }}–{{ page_obj.end_index }} / {{ page_obj.paginator.count }} kayıt
+  </span>
+
+  <div class="flex items-center gap-1">
+    <button class="flex h-8 w-8 items-center justify-center rounded-default border border-base-200 bg-white text-font-default-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-default-dark dark:hover:bg-base-800 {% if not page_obj.has_previous %}pointer-events-none opacity-50{% endif %}"
+            {% if page_obj.has_previous %}
+            hx-get="?page={{ page_obj.previous_page_number }}"
+            hx-target="#{{ target_id }}"
+            hx-swap="innerHTML"
+            hx-include="{{ include_selector }}"
+            hx-push-url="true"
+            {% endif %}>
+      <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
+    </button>
+
+    {% for num in page_range %}
+      {% if num == '…' %}
+        <span class="px-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">…</span>
+      {% else %}
+        <button class="flex h-8 w-8 items-center justify-center rounded-default border text-xs font-medium {% if page_obj.number == num %}border-primary-600 bg-primary-600 text-white{% else %}border-base-200 bg-white text-font-default-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-default-dark dark:hover:bg-base-800{% endif %}"
+                hx-get="?page={{ num }}"
+                hx-target="#{{ target_id }}"
+                hx-swap="innerHTML"
+                hx-include="{{ include_selector }}"
+                hx-push-url="true">{{ num }}</button>
+      {% endif %}
+    {% endfor %}
+
+    <button class="flex h-8 w-8 items-center justify-center rounded-default border border-base-200 bg-white text-font-default-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-default-dark dark:hover:bg-base-800 {% if not page_obj.has_next %}pointer-events-none opacity-50{% endif %}"
+            {% if page_obj.has_next %}
+            hx-get="?page={{ page_obj.next_page_number }}"
+            hx-target="#{{ target_id }}"
+            hx-swap="innerHTML"
+            hx-include="{{ include_selector }}"
+            hx-push-url="true"
+            {% endif %}>
+      <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
+    </button>
+  </div>
+</div>
+{% endif %}

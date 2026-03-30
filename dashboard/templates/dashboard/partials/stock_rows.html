@@ -1,0 +1,5 @@
+{% for s in stocks %}
+  {% include 'dashboard/partials/stock_row.html' %}
+{% empty %}
+  <tr><td colspan="9" class="px-6 py-10 text-center text-font-subtle-light dark:text-font-subtle-dark">Filtreye uygun stok kaydı bulunamadı.</td></tr>
+{% endfor %}

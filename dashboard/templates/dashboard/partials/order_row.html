@@ -1,0 +1,89 @@
+<tr id="order-row-{{ order.pk }}" class="crm-table__row overflow-hidden rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900 lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none">
+  <td data-label="Sipariş" class="crm-table__cell border-t border-base-200 px-4 py-3 first:border-t-0 dark:border-base-800 lg:pl-6 lg:pr-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <div class="min-w-0">
+      <div class="font-semibold text-font-important-light dark:text-font-important-dark">#{{ order.order_number }}</div>
+      <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ order.created_at|date:"d M Y H:i" }}</div>
+    </div>
+  </td>
+
+  <td data-label="Müşteri" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <div class="min-w-0">
+      <div class="font-medium text-font-important-light dark:text-font-important-dark">{{ order.customer }}</div>
+      <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ order.customer.get_type_display }}</div>
+    </div>
+  </td>
+
+  <td data-label="Kanal" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="text-font-default-light dark:text-font-default-dark">{{ order.sales_channel.name }}</span>
+  </td>
+
+  <td data-label="Tutar" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <span class="font-semibold text-font-important-light dark:text-font-important-dark">₺{{ order.total_amount|floatformat:2 }}</span>
+  </td>
+
+  <td data-label="Durum" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    {% include 'dashboard/partials/status_badge.html' with status=order.status %}
+  </td>
+
+  <td data-label="Aksiyonlar" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:pr-6 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+    <div class="flex w-full flex-wrap gap-1.5 lg:justify-end" x-data="{ cancelOpen: false }">
+      {% if order.status == 'PENDING' %}
+        <button class="btn-success inline-flex items-center gap-1 rounded-default px-3 py-1.5 text-xs font-medium"
+                hx-post="{% url 'dashboard:order_action' order.pk 'confirm' %}"
+                hx-target="#order-row-{{ order.pk }}"
+                hx-swap="outerHTML">
+          <span class="material-symbols-outlined" style="font-size:14px;">check</span>
+          Onayla
+        </button>
+        <button class="btn-danger inline-flex items-center gap-1 rounded-default px-3 py-1.5 text-xs font-medium"
+                @click="cancelOpen = true">
+          <span class="material-symbols-outlined" style="font-size:14px;">close</span>
+          İptal Et
+        </button>
+      {% elif order.status == 'CONFIRMED' %}
+        <button class="btn-info inline-flex items-center gap-1 rounded-default px-3 py-1.5 text-xs font-medium"
+                hx-post="{% url 'dashboard:order_action' order.pk 'ship' %}"
+                hx-target="#order-row-{{ order.pk }}"
+                hx-swap="outerHTML">
+          <span class="material-symbols-outlined" style="font-size:14px;">local_shipping</span>
+          Kargoya Ver
+        </button>
+        <button class="btn-danger inline-flex items-center gap-1 rounded-default px-3 py-1.5 text-xs font-medium"
+                @click="cancelOpen = true">
+          <span class="material-symbols-outlined" style="font-size:14px;">close</span>
+          İptal Et
+        </button>
+      {% elif order.status == 'SHIPPED' %}
+        <button class="btn-success inline-flex items-center gap-1 rounded-default px-3 py-1.5 text-xs font-medium"
+                hx-post="{% url 'dashboard:order_action' order.pk 'deliver' %}"
+                hx-target="#order-row-{{ order.pk }}"
+                hx-swap="outerHTML">
+          <span class="material-symbols-outlined" style="font-size:14px;">done_all</span>
+          Teslim Et
+        </button>
+      {% else %}
+        <span class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Aksiyon yok</span>
+      {% endif %}
+
+      <div x-show="cancelOpen" x-cloak
+           style="position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem;"
+           @click.self="cancelOpen = false">
+        <div class="w-full max-w-sm rounded-default border border-base-200 bg-white p-6 shadow-sm dark:border-base-800 dark:bg-base-900" @click.stop>
+          <div class="mb-1 font-semibold text-font-important-light dark:text-font-important-dark">Sipariş iptal edilsin mi?</div>
+          <div class="mb-6 text-sm text-font-default-light dark:text-font-default-dark">#{{ order.order_number }} iptal edildiğinde ayrılmış stok geri bırakılır.</div>
+          <div class="flex justify-end gap-2">
+            <button class="inline-flex items-center rounded-default border border-base-200 bg-white px-3 py-1.5 text-xs font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800"
+                    @click="cancelOpen = false">Vazgeç</button>
+            <button class="btn-danger inline-flex items-center gap-1 rounded-default px-3 py-1.5 text-xs font-medium"
+                    hx-post="{% url 'dashboard:order_action' order.pk 'cancel' %}"
+                    hx-target="#order-row-{{ order.pk }}"
+                    hx-swap="outerHTML"
+                    @click="cancelOpen = false">
+              Siparişi İptal Et
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </td>
+</tr>

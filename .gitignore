@@ -21,5 +21,7 @@ postgres_data/
 # IDE
 .vscode/
 .idea/
+.cursor/
+.claude/
 *.swp
 .DS_Store

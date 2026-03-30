@@ -1,311 +1,261 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SyncroCRM — Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <style>
-    body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-    .sidebar {
-      width: 240px; min-height: 100vh; background: #1a1d23;
-      position: fixed; top: 0; left: 0; z-index: 100;
-    }
-    .sidebar .brand {
-      padding: 1.25rem 1.5rem;
-      font-size: 1.1rem; font-weight: 700; color: #fff;
-      border-bottom: 1px solid #2d3139;
-      letter-spacing: .5px;
-    }
-    .sidebar .brand span { color: #4f8ef7; }
-    .sidebar .nav-link {
-      color: #9aa0ac; padding: .65rem 1.5rem;
-      border-radius: 0; transition: all .15s;
-    }
-    .sidebar .nav-link:hover, .sidebar .nav-link.active {
-      color: #fff; background: #2d3139;
-    }
-    .sidebar .nav-link i { margin-right: .6rem; width: 18px; }
-    .main { margin-left: 240px; padding: 2rem; }
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1.75rem;
-    }
-    .topbar h4 { font-weight: 700; margin: 0; color: #1a1d23; }
-    .topbar .user { color: #6c757d; font-size: .9rem; }
-    .kpi-card {
-      background: #fff; border-radius: 12px; padding: 1.4rem 1.6rem;
-      box-shadow: 0 1px 4px rgba(0,0,0,.07); border: none;
-      transition: box-shadow .2s;
-    }
-    .kpi-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.11); }
-    .kpi-card .icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; margin-bottom: .9rem;
-    }
-    .kpi-card .value { font-size: 2rem; font-weight: 700; color: #1a1d23; line-height: 1; }
-    .kpi-card .label { font-size: .8rem; color: #9aa0ac; margin-top: .25rem; text-transform: uppercase; letter-spacing: .5px; }
-    .chart-card {
-      background: #fff; border-radius: 12px; padding: 1.5rem;
-      box-shadow: 0 1px 4px rgba(0,0,0,.07); height: 100%;
-    }
-    .chart-card h6 { font-weight: 700; color: #1a1d23; margin-bottom: 1.2rem; }
-    .chart-wrap { position: relative; height: 260px; }
-    .table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; color: #9aa0ac; border-top: none; }
-    .table td { vertical-align: middle; font-size: .875rem; }
-    .badge-status { font-size: .72rem; padding: .3em .65em; border-radius: 6px; font-weight: 600; }
-    .movement-badge { font-size: .7rem; padding: .25em .55em; border-radius: 5px; font-weight: 600; }
-    .section-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
-    .section-card .section-header {
-      padding: 1rem 1.5rem; border-bottom: 1px solid #f0f2f5;
-      font-weight: 700; font-size: .9rem; color: #1a1d23;
-    }
-  </style>
-</head>
-<body>
+{% extends 'dashboard/base_unfold.html' %}
+{% block title %}Ana Panel | SyncroCRM{% endblock %}
+{% block page_title %}Operasyon Özeti{% endblock %}
 
-<!-- Sidebar -->
-<div class="sidebar">
-  <div class="brand">Syncro<span>CRM</span></div>
-  <nav class="nav flex-column pt-3">
-    <a href="{% url 'dashboard:index' %}" class="nav-link active">
-      <i class="bi bi-grid-1x2-fill"></i> Dashboard
-    </a>
-    <a href="/admin/inventory/product/" class="nav-link">
-      <i class="bi bi-box-seam"></i> Ürünler
-    </a>
-    <a href="/admin/inventory/stock/" class="nav-link">
-      <i class="bi bi-archive"></i> Stoklar
-    </a>
-    <a href="/admin/orders/order/" class="nav-link">
-      <i class="bi bi-bag-check"></i> Siparişler
-    </a>
-    <a href="/admin/customers/customer/" class="nav-link">
-      <i class="bi bi-people"></i> Müşteriler
-    </a>
-    <a href="/admin/customers/saleschannel/" class="nav-link">
-      <i class="bi bi-shop"></i> Satış Kanalları
-    </a>
-    <hr style="border-color:#2d3139; margin: .75rem 1.5rem;">
-    <a href="/admin/" class="nav-link">
-      <i class="bi bi-sliders"></i> Admin Panel
-    </a>
-  </nav>
+{% block page_badge %}
+<span class="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900 dark:text-primary-300">Canlı görünüm</span>
+{% endblock %}
+
+{% block page_intro %}
+<p class="mt-2 text-sm text-font-default-light dark:text-font-default-dark">
+  Sipariş, stok ve kanal performansını admin paneliyle aynı görsel dil içinde takip edin.
+</p>
+{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'dashboard:order_create' %}"
+   class="inline-flex items-center gap-2 rounded-default border border-transparent bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700">
+  <span class="material-symbols-outlined sym">add</span>
+  Yeni Sipariş
+</a>
+<a href="/admin/"
+   class="inline-flex items-center gap-2 rounded-default border border-base-200 bg-white px-3 py-2 text-sm font-medium text-font-important-light hover:bg-base-100 dark:border-base-700 dark:bg-transparent dark:text-font-important-dark dark:hover:bg-base-800">
+  <span class="material-symbols-outlined sym">tune</span>
+  Admin Paneli
+</a>
+{% endblock %}
+
+{% block content %}
+<div id="kpi-section"
+     hx-get="{% url 'dashboard:kpi_partial' %}"
+     hx-trigger="every 60s"
+     hx-swap="innerHTML">
+  {% include 'dashboard/partials/kpi.html' %}
 </div>
 
-<!-- Main -->
-<div class="main">
-  <div class="topbar">
-    <h4>Dashboard</h4>
-    <span class="user"><i class="bi bi-person-circle me-1"></i>{{ request.user.username }}</span>
+<div class="grid gap-4 xl:grid-cols-12">
+  <div class="space-y-4 xl:col-span-8">
+    <div class="grid gap-4 lg:grid-cols-2">
+      <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+        <div class="flex items-center gap-2 border-b border-base-200 px-5 py-4 dark:border-base-800">
+          <span class="material-symbols-outlined sym text-primary-600">pie_chart</span>
+          <div>
+            <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Satış Kanalı Dağılımı</h3>
+            <p class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Siparişlerin hangi kanallardan geldiğini izleyin.</p>
+          </div>
+        </div>
+        <div class="p-4"><div class="chart-wrap"><canvas id="channelChart"></canvas></div></div>
+      </section>
+
+      <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+        <div class="flex items-center gap-2 border-b border-base-200 px-5 py-4 dark:border-base-800">
+          <span class="material-symbols-outlined sym text-blue-600">donut_large</span>
+          <div>
+            <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Sipariş Durumları</h3>
+            <p class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Bekleyen ve tamamlanan akışı dengeleyin.</p>
+          </div>
+        </div>
+        <div class="p-4"><div class="chart-wrap"><canvas id="statusChart"></canvas></div></div>
+      </section>
+    </div>
+
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="flex flex-col gap-3 border-b border-base-200 px-5 py-4 dark:border-base-800 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Son Siparişler</h3>
+          <p class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Son işlem gören siparişleri hızlıca gözden geçirin.</p>
+        </div>
+        <a href="{% url 'dashboard:orders' %}" class="text-sm font-medium text-primary-700 hover:text-primary-800 dark:text-primary-300">Tüm siparişleri aç</a>
+      </div>
+
+      <div class="overflow-hidden">
+        <table class="crm-table">
+          <thead>
+            <tr class="bg-base-50 dark:bg-base-800">
+              <th class="border-b border-base-200 px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Sipariş</th>
+              <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Müşteri</th>
+              <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Kanal</th>
+              <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Tutar</th>
+              <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in recent_orders %}
+            <tr class="crm-table__row overflow-hidden rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900 lg:rounded-none lg:border-0 lg:bg-transparent lg:shadow-none">
+              <td data-label="Sipariş" class="crm-table__cell border-t border-base-200 px-4 py-3 first:border-t-0 dark:border-base-800 lg:pl-6 lg:pr-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+                <div>
+                  <div class="font-semibold text-font-important-light dark:text-font-important-dark">#{{ o.order_number }}</div>
+                  <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ o.created_at|date:"d M Y H:i" }}</div>
+                </div>
+              </td>
+              <td data-label="Müşteri" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+                <div>
+                  <div class="font-medium text-font-important-light dark:text-font-important-dark">{{ o.customer }}</div>
+                  <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ o.customer.get_type_display }}</div>
+                </div>
+              </td>
+              <td data-label="Kanal" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+                <span class="text-font-default-light dark:text-font-default-dark">{{ o.sales_channel.name }}</span>
+              </td>
+              <td data-label="Tutar" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+                <span class="font-semibold text-font-important-light dark:text-font-important-dark">₺{{ o.total_amount|floatformat:2 }}</span>
+              </td>
+              <td data-label="Durum" class="crm-table__cell border-t border-base-200 px-4 py-3 dark:border-base-800 lg:px-3 lg:pr-6 lg:py-4 {% if forloop.first %}lg:border-t-0{% else %}lg:border-t{% endif %}">
+                {% include 'dashboard/partials/status_badge.html' with status=o.status %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="crm-table__row overflow-hidden rounded-default border border-dashed border-base-200 bg-white dark:border-base-800 dark:bg-base-900">
+              <td class="crm-table__cell px-4 py-10 text-sm text-font-subtle-light dark:text-font-subtle-dark" colspan="5">Henüz sipariş bulunmuyor.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <!-- KPI Kartları -->
-  <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card">
-        <div class="icon" style="background:#e8f0fe;color:#4f8ef7"><i class="bi bi-bag"></i></div>
-        <div class="value">{{ total_orders }}</div>
-        <div class="label">Toplam Sipariş</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card">
-        <div class="icon" style="background:#e6f9f0;color:#22c55e"><i class="bi bi-bag-plus"></i></div>
-        <div class="value">{{ today_orders }}</div>
-        <div class="label">Bugünkü Sipariş</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card">
-        <div class="icon" style="background:#fff7e6;color:#f59e0b"><i class="bi bi-currency-exchange"></i></div>
-        <div class="value">₺{{ revenue|floatformat:0 }}</div>
-        <div class="label">Toplam Gelir (Teslim)</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-      <div class="kpi-card">
-        <div class="icon" style="background:#feeaea;color:#ef4444"><i class="bi bi-exclamation-triangle"></i></div>
-        <div class="value">{{ critical_count }}</div>
-        <div class="label">Kritik Stok</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Grafikler -->
-  <div class="row g-3 mb-4">
-    <div class="col-lg-5">
-      <div class="chart-card">
-        <h6><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Satış Kanalı Dağılımı</h6>
-        <div class="chart-wrap"><canvas id="channelChart"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="chart-card">
-        <h6><i class="bi bi-record-circle me-2 text-warning"></i>Sipariş Durumları</h6>
-        <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
-      </div>
-    </div>
-    <div class="col-lg-3">
-      <div class="chart-card">
-        <h6><i class="bi bi-bar-chart-fill me-2 text-success"></i>Son 7 Gün</h6>
-        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Alt Tablolar -->
-  <div class="row g-3">
-    <!-- Son Siparişler -->
-    <div class="col-lg-7">
-      <div class="section-card">
-        <div class="section-header"><i class="bi bi-clock-history me-2"></i>Son Siparişler</div>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead>
-              <tr>
-                <th class="ps-4">Sipariş No</th>
-                <th>Müşteri</th>
-                <th>Kanal</th>
-                <th>Tutar</th>
-                <th>Durum</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for order in recent_orders %}
-              <tr>
-                <td class="ps-4 fw-semibold">#{{ order.order_number }}</td>
-                <td>{{ order.customer }}</td>
-                <td><span class="text-muted">{{ order.sales_channel.name }}</span></td>
-                <td>₺{{ order.total_amount|floatformat:2 }}</td>
-                <td>
-                  {% if order.status == 'DELIVERED' %}
-                    <span class="badge-status bg-success text-white">Teslim</span>
-                  {% elif order.status == 'CONFIRMED' %}
-                    <span class="badge-status bg-primary text-white">Onaylandı</span>
-                  {% elif order.status == 'SHIPPED' %}
-                    <span class="badge-status bg-info text-white">Kargoda</span>
-                  {% elif order.status == 'PENDING' %}
-                    <span class="badge-status bg-warning text-dark">Beklemede</span>
-                  {% elif order.status == 'CANCELLED' %}
-                    <span class="badge-status bg-danger text-white">İptal</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-4">Sipariş bulunamadı</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+  <div class="space-y-4 xl:col-span-4">
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="flex items-center gap-2 border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <span class="material-symbols-outlined sym text-green-600">bar_chart</span>
+        <div>
+          <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Son 7 Gün</h3>
+          <p class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Günlük sipariş ritmindeki yönü izleyin.</p>
         </div>
       </div>
-    </div>
+      <div class="p-4"><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+    </section>
 
-    <!-- Kritik Stok + Son Hareketler -->
-    <div class="col-lg-5">
-      <!-- Kritik Stok -->
-      {% if critical_stocks %}
-      <div class="section-card mb-3">
-        <div class="section-header text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Kritik Stok Uyarıları</div>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead><tr><th class="ps-4">Ürün</th><th>Depo</th><th>Mevcut</th><th>Min</th></tr></thead>
-            <tbody>
-              {% for s in critical_stocks %}
-              <tr>
-                <td class="ps-4"><span class="fw-semibold">{{ s.product.sku }}</span></td>
-                <td class="text-muted small">{{ s.warehouse.name }}</td>
-                <td><span class="text-danger fw-bold">{{ s.available_quantity }}</span></td>
-                <td class="text-muted">{{ s.min_level }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    {% if critical_stocks %}
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="flex items-center justify-between border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <div>
+          <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Kritik Stok</h3>
+          <p class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Minimum seviyenin altındaki ürünler.</p>
         </div>
+        <a href="{% url 'dashboard:stock' %}" class="text-sm font-medium text-primary-700 hover:text-primary-800 dark:text-primary-300">Stok ekranı</a>
       </div>
-      {% endif %}
+      <div class="divide-y divide-base-200 dark:divide-base-800">
+        {% for s in critical_stocks %}
+        <div class="flex items-start justify-between gap-3 px-5 py-4">
+          <div>
+            <div class="font-medium text-font-important-light dark:text-font-important-dark">{{ s.product.sku }}</div>
+            <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ s.product.name }} · {{ s.warehouse.name }}</div>
+          </div>
+          <div class="text-right">
+            <div class="font-semibold text-red-700 dark:text-red-400">{{ s.available_quantity }}</div>
+            <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">Min {{ s.min_level }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
-      <!-- Son Stok Hareketleri -->
-      <div class="section-card">
-        <div class="section-header"><i class="bi bi-arrow-left-right me-2"></i>Son Stok Hareketleri</div>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead><tr><th class="ps-4">Ürün</th><th>Hareket</th><th>Miktar</th><th>Referans</th></tr></thead>
-            <tbody>
-              {% for m in recent_movements %}
-              <tr>
-                <td class="ps-4 fw-semibold small">{{ m.stock.product.sku }}</td>
-                <td>
-                  {% if m.type == 'IN' %}
-                    <span class="movement-badge bg-success text-white">Giriş</span>
-                  {% elif m.type == 'OUT' %}
-                    <span class="movement-badge bg-danger text-white">Çıkış</span>
-                  {% elif m.type == 'TRANSFER' %}
-                    <span class="movement-badge bg-info text-white">Transfer</span>
-                  {% else %}
-                    <span class="movement-badge bg-secondary text-white">Düzeltme</span>
-                  {% endif %}
-                </td>
-                <td class="{% if m.change > 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
-                  {% if m.change > 0 %}+{% endif %}{{ m.change }}
-                </td>
-                <td class="text-muted small">{{ m.reference|default:"—" }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="flex items-center justify-between border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <div>
+          <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Son Stok Hareketleri</h3>
+          <p class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Depo tarafındaki son değişiklikler.</p>
         </div>
+        <a href="{% url 'dashboard:stock' %}" class="text-sm font-medium text-primary-700 hover:text-primary-800 dark:text-primary-300">Stok detayları</a>
       </div>
-    </div>
+      <div class="divide-y divide-base-200 dark:divide-base-800">
+        {% for m in recent_movements %}
+        <div class="flex items-start justify-between gap-3 px-5 py-4">
+          <div>
+            <div class="font-medium text-font-important-light dark:text-font-important-dark">{{ m.stock.product.sku }}</div>
+            <div class="mt-1 flex items-center gap-2">
+              {% include 'dashboard/partials/movement_badge.html' with mtype=m.type %}
+              <span class="text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ m.reference|default:"Referans yok" }}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-semibold {% if m.change > 0 %}text-green-700 dark:text-green-400{% else %}text-red-700 dark:text-red-400{% endif %}">
+              {% if m.change > 0 %}+{% endif %}{{ m.change }}
+            </div>
+            <div class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">{{ m.created_at|date:"d M H:i" }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="px-5 py-8 text-sm text-font-subtle-light dark:text-font-subtle-dark">Stok hareketi bulunmuyor.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="rounded-default border border-base-200 bg-white shadow-xs dark:border-base-800 dark:bg-base-900">
+      <div class="border-b border-base-200 px-5 py-4 dark:border-base-800">
+        <h3 class="text-sm font-semibold text-font-important-light dark:text-font-important-dark">Hızlı Erişim</h3>
+        <p class="mt-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">Admin ve dashboard akışları arasında hızlı geçiş yapın.</p>
+      </div>
+      <div class="space-y-2 p-4">
+        <a href="/admin/inventory/product/" class="flex items-center justify-between gap-3 rounded-default border border-base-200 px-4 py-3 hover:bg-base-50 dark:border-base-800 dark:hover:bg-base-800">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined sym text-primary-600">inventory_2</span>
+            <div>
+              <div class="text-sm font-medium text-font-important-light dark:text-font-important-dark">Ürünler</div>
+              <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Kart ve fiyat yönetimi</div>
+            </div>
+          </div>
+          <span class="material-symbols-outlined sym text-font-subtle-light dark:text-font-subtle-dark">arrow_forward</span>
+        </a>
+        <a href="/admin/customers/customer/" class="flex items-center justify-between gap-3 rounded-default border border-base-200 px-4 py-3 hover:bg-base-50 dark:border-base-800 dark:hover:bg-base-800">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined sym text-blue-600">people</span>
+            <div>
+              <div class="text-sm font-medium text-font-important-light dark:text-font-important-dark">Müşteriler</div>
+              <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">CRM verisini güncelleyin</div>
+            </div>
+          </div>
+          <span class="material-symbols-outlined sym text-font-subtle-light dark:text-font-subtle-dark">arrow_forward</span>
+        </a>
+        <a href="/admin/orders/order/" class="flex items-center justify-between gap-3 rounded-default border border-base-200 px-4 py-3 hover:bg-base-50 dark:border-base-800 dark:hover:bg-base-800">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined sym text-green-600">receipt_long</span>
+            <div>
+              <div class="text-sm font-medium text-font-important-light dark:text-font-important-dark">Sipariş Yönetimi</div>
+              <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Admin detay düzenleme ekranı</div>
+            </div>
+          </div>
+          <span class="material-symbols-outlined sym text-font-subtle-light dark:text-font-subtle-dark">arrow_forward</span>
+        </a>
+        <a href="/admin/inventory/warehouse/" class="flex items-center justify-between gap-3 rounded-default border border-base-200 px-4 py-3 hover:bg-base-50 dark:border-base-800 dark:hover:bg-base-800">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined sym text-orange-600">warehouse</span>
+            <div>
+              <div class="text-sm font-medium text-font-important-light dark:text-font-important-dark">Depolar</div>
+              <div class="text-xs text-font-subtle-light dark:text-font-subtle-dark">Lokasyon ve depo tipleri</div>
+            </div>
+          </div>
+          <span class="material-symbols-outlined sym text-font-subtle-light dark:text-font-subtle-dark">arrow_forward</span>
+        </a>
+      </div>
+    </section>
   </div>
 </div>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% block extra_scripts %}
 <script>
-const PALETTE = ['#4f8ef7','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4'];
-
-// Satış Kanalı Pasta Grafik
+const palette = ['#4f46e5', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 new Chart(document.getElementById('channelChart'), {
   type: 'pie',
-  data: {
-    labels: {{ channel_labels|safe }},
-    datasets: [{ data: {{ channel_counts|safe }}, backgroundColor: PALETTE, borderWidth: 2 }]
-  },
-  options: { plugins: { legend: { position: 'bottom' } }, maintainAspectRatio: false }
+  data: { labels: {{ channel_labels|safe }}, datasets: [{ data: {{ channel_counts|safe }}, backgroundColor: palette, borderWidth: 2 }] },
+  options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, maintainAspectRatio: false }
 });
-
-// Sipariş Durumu Donut
 new Chart(document.getElementById('statusChart'), {
   type: 'doughnut',
-  data: {
-    labels: {{ status_labels|safe }},
-    datasets: [{ data: {{ status_counts|safe }}, backgroundColor: PALETTE, borderWidth: 2 }]
-  },
-  options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%', maintainAspectRatio: false }
+  data: { labels: {{ status_labels|safe }}, datasets: [{ data: {{ status_counts|safe }}, backgroundColor: palette, borderWidth: 2 }] },
+  options: { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }, cutout: '60%', maintainAspectRatio: false }
 });
-
-// 7 Günlük Trend Bar
 new Chart(document.getElementById('trendChart'), {
   type: 'bar',
   data: {
     labels: {{ trend_labels|safe }},
-    datasets: [{
-      label: 'Sipariş',
-      data: {{ trend_counts|safe }},
-      backgroundColor: '#4f8ef780',
-      borderColor: '#4f8ef7',
-      borderWidth: 2,
-      borderRadius: 6
-    }]
+    datasets: [{ label: 'Sipariş', data: {{ trend_counts|safe }}, backgroundColor: '#4f46e580', borderColor: '#4f46e5', borderWidth: 2, borderRadius: 6 }]
   },
-  options: {
-    plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-    maintainAspectRatio: false
-  }
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, maintainAspectRatio: false }
 });
 </script>
-</body>
-</html>
+{% endblock %}

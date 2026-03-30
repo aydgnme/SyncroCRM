@@ -6,8 +6,8 @@ from .models import Stock
 @receiver(post_save, sender=Stock)
 def check_critical_stock(sender, instance, **kwargs):
     """
-    Stok kaydı her güncellendiğinde kritik seviyeye düşüp düşmediğini kontrol eder.
-    Kritikse Celery task'ı arka planda tetikler.
+    After every Stock save, check whether the level has fallen below the minimum.
+    If critical, dispatch a Celery task to notify admins.
     """
     if instance.is_critical:
         from .tasks import notify_critical_stock

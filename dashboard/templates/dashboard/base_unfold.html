@@ -1,0 +1,170 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block is_fullwidth %}1{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .btn-success { background:#16a34a; color:#fff; border:none; cursor:pointer; border-radius:var(--border-radius,6px); transition:background .16s ease; }
+  .btn-success:hover { background:#15803d; }
+  .btn-danger  { background:#dc2626; color:#fff; border:none; cursor:pointer; border-radius:var(--border-radius,6px); transition:background .16s ease; }
+  .btn-danger:hover  { background:#b91c1c; }
+  .btn-info    { background:#0891b2; color:#fff; border:none; cursor:pointer; border-radius:var(--border-radius,6px); transition:background .16s ease; }
+  .btn-info:hover    { background:#0e7490; }
+
+  .badge-critical { background:#fee2e2; color:#dc2626; }
+  .badge-normal   { background:#dcfce7; color:#16a34a; }
+
+  .search-field:focus { outline:none; border-color:rgb(79 70 229); box-shadow:0 0 0 3px rgba(79,70,229,.12); }
+
+  .htmx-indicator { opacity:0; transition:opacity .2s; }
+  .htmx-request .htmx-indicator { opacity:1; }
+
+  .sym { font-size:18px; line-height:1; vertical-align:middle; }
+
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .spin { animation:spin .8s linear infinite; display:inline-block; }
+
+  .chart-wrap { position:relative; height:260px; }
+  @media (max-width: 767px) {
+    .chart-wrap { height:220px; }
+  }
+
+  .toast-stack { position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+
+  .crm-table { border-collapse:separate; border-spacing:0; width:100%; }
+  .crm-table thead { display:none; }
+  .crm-table tbody { display:block; }
+  .crm-table__row { display:block; margin-bottom:.75rem; }
+  .crm-table__cell { display:flex; align-items:flex-start; gap:1rem; min-width:0; }
+  .crm-table__cell::before {
+    content:attr(data-label);
+    color:rgb(var(--color-font-subtle-light));
+    font-size:.72rem;
+    font-weight:600;
+    letter-spacing:.04em;
+    margin-right:auto;
+    text-transform:uppercase;
+  }
+  .dark .crm-table__cell::before { color:rgb(var(--color-font-subtle-dark)); }
+
+  .crm-form-layout { display:grid; gap:1rem; }
+  .crm-sticky { position:sticky; top:5.5rem; }
+
+  @media (min-width: 1024px) {
+    .crm-table { display:table; }
+    .crm-table thead { display:table-header-group; }
+    .crm-table tbody { display:table-row-group; }
+    .crm-table__row { display:table-row; margin-bottom:0; }
+    .crm-table__cell { display:table-cell; }
+    .crm-table__cell::before { display:none; }
+  }
+
+  @media (min-width: 1280px) {
+    .crm-form-layout { grid-template-columns:minmax(0,1.65fr) minmax(320px,.85fr); }
+  }
+
+  [x-cloak] { display:none !important; }
+</style>
+{% endblock %}
+
+{# extrahead is inside <head>; only put non-DOM things here #}
+{% block extrahead %}
+{{ block.super }}
+{% block extra_head %}{% endblock %}
+{% endblock %}
+
+{# Suppress the default Django admin breadcrumb bar #}
+{% block breadcrumbs %}{% endblock %}
+
+{% block content_title %}
+<div class="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+  <div class="max-w-3xl">
+    <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+      {% block page_kicker %}
+      <span>SyncroCRM</span>
+      <span class="inline-block h-1 w-1 rounded-full bg-primary-600"></span>
+      <span>Operasyon</span>
+      {% endblock %}
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{% block page_title %}{% endblock %}</h1>
+      {% block page_badge %}{% endblock %}
+      <span class="htmx-indicator inline-flex items-center gap-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">
+        <span class="material-symbols-outlined sym spin">sync</span>
+        Güncelleniyor
+      </span>
+    </div>
+    {% block page_intro %}{% endblock %}
+  </div>
+  <div class="flex flex-wrap items-center gap-2">{% block topbar_actions %}{% endblock %}</div>
+</div>
+{% block page_meta %}{% endblock %}
+{% endblock %}
+
+{#
+  footer block is defined (empty) in unfold/templates/admin/base.html and rendered
+  inside <body> after the main content — the correct place for toast/modal DOM + JS.
+  Unfold's skeleton already loads Alpine.js, HTMX, Chart.js and Material Symbols,
+  so no CDN duplicates are needed here.
+#}
+{% block footer %}
+<!-- Toast notification container -->
+<div id="toast-stack" class="toast-stack"></div>
+
+<!-- Modal mount point — HTMX loads modal HTML into this element on demand -->
+<div id="modal-root"></div>
+
+<script>
+  /* ── HTMX: attach CSRF token to every request ── */
+  document.addEventListener('htmx:configRequest', function(e) {
+    e.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+  });
+
+  /* ── HTMX: parse HX-Trigger response header for toast / modal-close ── */
+  document.addEventListener('htmx:afterRequest', function(e) {
+    var raw = e.detail.xhr && e.detail.xhr.getResponseHeader('HX-Trigger');
+    if (!raw) return;
+    try {
+      var d = JSON.parse(raw);
+      if (d.showToast) _showToast(d.showToast.msg, d.showToast.type);
+      if (d.closeModal) _closeModal();
+    } catch (_) {}
+  });
+
+  /* ── Toast helper ── */
+  function _showToast(msg, type) {
+    var stack = document.getElementById('toast-stack');
+    if (!stack) return;
+    var el = document.createElement('div');
+    el.style.cssText = 'min-width:260px;pointer-events:auto;';
+    var ok = (type === 'success');
+    el.className = 'bg-base-900 text-white px-4 py-3 rounded-default flex items-center gap-2 shadow-sm ' +
+      (ok ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500');
+    var icon = document.createElement('span');
+    icon.className = 'material-symbols-outlined sym ' + (ok ? 'text-green-400' : 'text-red-400');
+    icon.style.fontSize = '18px';
+    icon.textContent = ok ? 'check_circle' : 'error';
+    var text = document.createElement('span');
+    text.className = 'text-sm';
+    text.textContent = msg;
+    el.appendChild(icon);
+    el.appendChild(text);
+    stack.appendChild(el);
+    setTimeout(function() { el.remove(); }, 3500);
+  }
+
+  /* ── Modal close helper ── */
+  function _closeModal() {
+    var root = document.getElementById('modal-root');
+    if (root) root.innerHTML = '';
+  }
+
+  /* ── Custom window events (Alpine x-on:show-toast / x-on:close-modal) ── */
+  window.addEventListener('show-toast',  function(e) { _showToast(e.detail.msg, e.detail.type); });
+  window.addEventListener('close-modal', _closeModal);
+</script>
+
+{% block extra_scripts %}{% endblock %}
+{% endblock %}

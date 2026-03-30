@@ -1,0 +1,22 @@
+<div class="overflow-hidden">
+  <table class="crm-table">
+    <thead>
+      <tr class="bg-base-50 dark:bg-base-800">
+        <th class="border-b border-base-200 px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">SKU</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Ürün</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Depo</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Toplam</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Ayrılan</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Kullanılabilir</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Minimum</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Durum</th>
+        <th class="border-b border-base-200 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:border-base-800 dark:text-font-subtle-dark">Aksiyon</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% include 'dashboard/partials/stock_rows.html' %}
+    </tbody>
+  </table>
+</div>
+
+{% include 'dashboard/partials/pagination.html' with target_id="stock-content" include_selector="[name='q'],[name='warehouse_filter']" %}

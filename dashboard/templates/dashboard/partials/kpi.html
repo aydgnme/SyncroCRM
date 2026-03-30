@@ -1,0 +1,49 @@
+<div class="mb-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="rounded-default border border-base-200 bg-white p-5 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="rounded-default bg-primary-100 p-2.5 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
+        <span class="material-symbols-outlined" style="font-size:20px;">shopping_cart</span>
+      </div>
+      <span class="rounded-full bg-base-100 px-2.5 py-1 text-xs font-medium text-font-subtle-light dark:bg-base-800 dark:text-font-subtle-dark">Operasyon</span>
+    </div>
+    <div class="text-3xl font-bold text-font-important-light dark:text-font-important-dark">{{ total_orders }}</div>
+    <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Toplam Sipariş</div>
+    <p class="mt-3 text-sm text-font-default-light dark:text-font-default-dark">Sistemdeki sipariş hacmini aynı panelden izleyin.</p>
+  </div>
+
+  <div class="rounded-default border border-base-200 bg-white p-5 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="rounded-default bg-green-100 p-2.5 text-green-700 dark:bg-green-900 dark:text-green-400">
+        <span class="material-symbols-outlined" style="font-size:20px;">add_shopping_cart</span>
+      </div>
+      <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-400">Bugün</span>
+    </div>
+    <div class="text-3xl font-bold text-font-important-light dark:text-font-important-dark">{{ today_orders }}</div>
+    <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Bugün Açılan</div>
+    <p class="mt-3 text-sm text-font-default-light dark:text-font-default-dark">Gün içi yeni sipariş akışını canlı olarak görün.</p>
+  </div>
+
+  <div class="rounded-default border border-base-200 bg-white p-5 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="rounded-default bg-orange-100 p-2.5 text-orange-700 dark:bg-orange-900 dark:text-orange-400">
+        <span class="material-symbols-outlined" style="font-size:20px;">payments</span>
+      </div>
+      <span class="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-400">Teslim</span>
+    </div>
+    <div class="text-3xl font-bold text-font-important-light dark:text-font-important-dark">₺{{ revenue|floatformat:0 }}</div>
+    <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Teslim Geliri</div>
+    <p class="mt-3 text-sm text-font-default-light dark:text-font-default-dark">Teslim edilen siparişlerden oluşan gelir özeti.</p>
+  </div>
+
+  <div class="rounded-default border border-base-200 bg-white p-5 shadow-xs dark:border-base-800 dark:bg-base-900">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div class="rounded-default bg-red-100 p-2.5 text-red-700 dark:bg-red-900 dark:text-red-400">
+        <span class="material-symbols-outlined" style="font-size:20px;">warning</span>
+      </div>
+      <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 dark:bg-red-900 dark:text-red-400">Aksiyon</span>
+    </div>
+    <div class="text-3xl font-bold text-font-important-light dark:text-font-important-dark">{{ critical_count }}</div>
+    <div class="mt-1 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">Kritik Stok</div>
+    <p class="mt-3 text-sm text-font-default-light dark:text-font-default-dark">Minimum seviyenin altına düşen ürünleri öne çıkarın.</p>
+  </div>
+</div>

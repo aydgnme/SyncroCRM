@@ -8,8 +8,8 @@ from .models import Order, OrderItem
 @receiver(post_save, sender=OrderItem)
 def reserve_stock_on_item_create(sender, instance, created, **kwargs):
     """
-    Sipariş kalemi oluşturulunca ilgili stokta rezervasyon başlatılır.
-    Gerçek stok düşmez, sadece reserved_quantity artar.
+    Reserve stock when an order item is created.
+    Only reserved_quantity increases — actual quantity is not deducted yet.
     """
     if not created:
         return
@@ -26,13 +26,13 @@ def reserve_stock_on_item_create(sender, instance, created, **kwargs):
 @receiver(pre_save, sender=Order)
 def handle_order_status_change(sender, instance, **kwargs):
     """
-    Sipariş durumu değişimlerine göre stok hareketlerini yönetir.
+    Manage stock movements based on order status transitions.
 
-    PENDING → CONFIRMED : Gerçek stok düşer, rezervasyon serbest kalır.
-    * → CANCELLED       : Rezervasyon iade edilir, stok dokunulmaz.
+    PENDING → CONFIRMED : Deduct real stock, release reservation.
+    * → CANCELLED       : Release reservation; restore stock if already confirmed.
     """
     if not instance.pk:
-        return  # yeni sipariş, henüz status değişimi yok
+        return  # New order, no status change yet
 
     try:
         previous = Order.objects.get(pk=instance.pk)
@@ -51,7 +51,7 @@ def handle_order_status_change(sender, instance, **kwargs):
 
 
 def _confirm_order_stock(order):
-    """CONFIRMED: Stoktan gerçek düşüş + StockMovement kaydı."""
+    """Deduct real stock and record an OUT movement for each item."""
     for item in order.items.select_related('product', 'warehouse').all():
         stock = Stock.objects.select_for_update().get(
             product=item.product,
@@ -65,13 +65,13 @@ def _confirm_order_stock(order):
             stock=stock,
             change=-item.quantity,
             type=StockMovement.MovementType.OUT,
-            reason='Sipariş onayı',
+            reason='Order confirmed',
             reference=order.order_number,
         )
 
 
 def _cancel_order_stock(order, previous_status):
-    """CANCELLED: Rezervasyon iade edilir. CONFIRMED ise stok geri yüklenir."""
+    """Release reservation on cancel. Restore real stock if order was already confirmed."""
     for item in order.items.select_related('product', 'warehouse').all():
         stock = Stock.objects.select_for_update().get(
             product=item.product,
@@ -79,12 +79,12 @@ def _cancel_order_stock(order, previous_status):
         )
 
         if previous_status == Order.Status.PENDING:
-            # Sadece rezervasyon vardı, gerçek stok düşmemişti
+            # Only reservation existed — real stock was never deducted
             stock.reserved_quantity -= item.quantity
             stock.save(update_fields=['reserved_quantity', 'updated_at'])
 
         elif previous_status == Order.Status.CONFIRMED:
-            # Gerçek stok düşmüştü, geri yükle
+            # Real stock was already deducted — restore it
             stock.quantity += item.quantity
             stock.save(update_fields=['quantity', 'updated_at'])
 
@@ -92,6 +92,6 @@ def _cancel_order_stock(order, previous_status):
                 stock=stock,
                 change=item.quantity,
                 type=StockMovement.MovementType.ADJUSTMENT,
-                reason='Sipariş iptali — stok iadesi',
+                reason='Order cancelled — stock restored',
                 reference=order.order_number,
             )
