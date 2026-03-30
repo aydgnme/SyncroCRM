@@ -78,29 +78,32 @@
 {# Suppress the default Django admin breadcrumb bar #}
 {% block breadcrumbs %}{% endblock %}
 
-{% block content_title %}
-<div class="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-  <div class="max-w-3xl">
-    <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
-      {% block page_kicker %}
-      <span>SyncroCRM</span>
-      <span class="inline-block h-1 w-1 rounded-full bg-primary-600"></span>
-      <span>Operasyon</span>
-      {% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+    <div class="max-w-3xl">
+      <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-font-subtle-light dark:text-font-subtle-dark">
+        {% block page_kicker %}
+        <span>SyncroCRM</span>
+        <span class="inline-block h-1 w-1 rounded-full bg-primary-600"></span>
+        <span>Operasyon</span>
+        {% endblock %}
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{% block page_title %}{% endblock %}</h1>
+        {% block page_badge %}{% endblock %}
+        <span class="htmx-indicator inline-flex items-center gap-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">
+          <span class="material-symbols-outlined sym spin">sync</span>
+          Güncelleniyor
+        </span>
+      </div>
+      {% block page_intro %}{% endblock %}
     </div>
-    <div class="flex flex-wrap items-center gap-3">
-      <h1 class="text-2xl font-semibold text-font-important-light dark:text-font-important-dark">{% block page_title %}{% endblock %}</h1>
-      {% block page_badge %}{% endblock %}
-      <span class="htmx-indicator inline-flex items-center gap-1 text-xs text-font-subtle-light dark:text-font-subtle-dark">
-        <span class="material-symbols-outlined sym spin">sync</span>
-        Güncelleniyor
-      </span>
-    </div>
-    {% block page_intro %}{% endblock %}
+    <div class="flex flex-wrap items-center gap-2">{% block topbar_actions %}{% endblock %}</div>
   </div>
-  <div class="flex flex-wrap items-center gap-2">{% block topbar_actions %}{% endblock %}</div>
+  {% block page_meta %}{% endblock %}
+  {% block dashboard_content %}{% endblock %}
 </div>
-{% block page_meta %}{% endblock %}
 {% endblock %}
 
 {#

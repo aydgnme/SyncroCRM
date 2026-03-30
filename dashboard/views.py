@@ -1,6 +1,7 @@
 import json
 import uuid
 
+from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -20,6 +21,11 @@ PAGE_SIZE = 25
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
+
+def _render_dashboard(request, template_name, context=None):
+    merged_context = {**admin.site.each_context(request), **(context or {})}
+    return render(request, template_name, merged_context)
+
 
 def _kpi_context():
     today = timezone.now().date()
@@ -76,7 +82,7 @@ def index(request):
         'recent_movements': StockMovement.objects.select_related('stock__product', 'stock__warehouse').order_by('-created_at')[:10],
         'recent_orders': Order.objects.select_related('customer', 'sales_channel').prefetch_related('items').order_by('-created_at')[:8],
     }
-    return render(request, 'dashboard/index.html', context)
+    return _render_dashboard(request, 'dashboard/index.html', context)
 
 
 @login_required
@@ -128,7 +134,7 @@ def orders(request):
 
     if request.headers.get('HX-Request'):
         return render(request, 'dashboard/partials/orders_content.html', ctx)
-    return render(request, 'dashboard/orders.html', ctx)
+    return _render_dashboard(request, 'dashboard/orders.html', ctx)
 
 
 @login_required
@@ -239,9 +245,9 @@ def order_create(request):
         ctx = _order_create_context(initial_items)
         ctx['errors'] = errors
         ctx['prev'] = request.POST
-        return render(request, 'dashboard/order_create.html', ctx)
+        return _render_dashboard(request, 'dashboard/order_create.html', ctx)
 
-    return render(request, 'dashboard/order_create.html', _order_create_context())
+    return _render_dashboard(request, 'dashboard/order_create.html', _order_create_context())
 
 
 def _order_create_context(initial_items='[]'):
@@ -299,7 +305,7 @@ def stock(request):
 
     if request.headers.get('HX-Request'):
         return render(request, 'dashboard/partials/stock_content.html', ctx)
-    return render(request, 'dashboard/stock.html', ctx)
+    return _render_dashboard(request, 'dashboard/stock.html', ctx)
 
 
 @login_required
